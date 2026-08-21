@@ -1,0 +1,52 @@
+name: cloud-agent-platform
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8000
+      ARTIFACT_ROOT: /app/.artifacts
+      RUN_ROOT: /app/.runs
+      REPOSITORY_IMPORT_ROOT: /app/examples
+      # Compose uses the trusted local adapter. The Docker-backed sandbox is
+      # supported when API/worker runs on a trusted host with Docker access.
+      SANDBOX_BACKEND: local
+    init: true
+    ports:
+      - "127.0.0.1:${APP_PORT:-8001}:8000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid,nodev
+    volumes:
+      - artifacts:/app/.artifacts
+      - runs:/app/.runs
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=2)"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  sandbox-image:
+    profiles: ["sandbox-image"]
+    build:
+      context: .
+      dockerfile: sandbox/Dockerfile
+    image: cloud-agent-sandbox:local
+
+volumes:
+  artifacts:
+  runs:

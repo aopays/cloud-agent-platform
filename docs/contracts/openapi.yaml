@@ -1,0 +1,486 @@
+openapi: 3.1.0
+info:
+  title: Cloud Agent Platform API
+  version: 0.1.0
+  description: P0 contract for task lifecycle, events, and artifacts.
+servers:
+  - url: http://localhost:8000
+security:
+  - bearerAuth: []
+paths:
+  /v1/discovery-sessions:
+    post:
+      operationId: createDiscoverySession
+      summary: Start a multi-turn requirement discovery conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDiscoverySessionRequest'
+      responses:
+        '201':
+          description: Discovery session created with the first assistant questions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoverySession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/discovery-sessions/{sessionId}:
+    get:
+      operationId: getDiscoverySession
+      summary: Get the conversation and report state
+      parameters:
+        - $ref: '#/components/parameters/DiscoverySessionId'
+      responses:
+        '200':
+          description: Discovery session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoverySession'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/discovery-sessions/{sessionId}/messages:
+    post:
+      operationId: addDiscoveryMessage
+      summary: Answer questions and continue requirement discovery
+      parameters:
+        - $ref: '#/components/parameters/DiscoverySessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddDiscoveryMessageRequest'
+      responses:
+        '200':
+          description: Updated discovery session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoverySession'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Session is finalized or reached its round limit
+  /v1/discovery-sessions/{sessionId}/finalize:
+    post:
+      operationId: finalizeDiscoverySession
+      summary: Generate the software design report
+      parameters:
+        - $ref: '#/components/parameters/DiscoverySessionId'
+      responses:
+        '200':
+          description: Finalized session with report and artifact metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoverySession'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/discovery-sessions/{sessionId}/report:
+    get:
+      operationId: downloadDiscoveryReport
+      summary: Download the finalized Markdown software design report
+      parameters:
+        - $ref: '#/components/parameters/DiscoverySessionId'
+      responses:
+        '200':
+          description: Software design report
+          content:
+            text/markdown:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Report has not been generated
+  /v1/tasks:
+    post:
+      operationId: createTask
+      summary: Create an agent task
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 128
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '202':
+          description: Task accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Idempotency key reused with different input
+  /v1/tasks/{taskId}:
+    get:
+      operationId: getTask
+      summary: Get task state and result summary
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: Task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/tasks/{taskId}/cancel:
+    post:
+      operationId: cancelTask
+      summary: Request cancellation
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '202':
+          description: Cancellation accepted or task already terminal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/tasks/{taskId}/events:
+    get:
+      operationId: streamTaskEvents
+      summary: Stream public task events using SSE
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+        - in: query
+          name: afterSequence
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Server-sent event stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/tasks/{taskId}/artifacts:
+    get:
+      operationId: listTaskArtifacts
+      summary: List task artifacts
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: Artifact metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Artifact'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/tasks/{taskId}/artifacts/{artifactId}:
+    get:
+      operationId: downloadTaskArtifact
+      summary: Download a task artifact after tenant authorization
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+        - in: path
+          name: artifactId
+          required: true
+          schema:
+            type: string
+            pattern: '^artifact_[A-Za-z0-9_-]+$'
+      responses:
+        '200':
+          description: Artifact contents
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    DiscoverySessionId:
+      in: path
+      name: sessionId
+      required: true
+      schema:
+        type: string
+        pattern: '^discovery_[A-Za-z0-9_-]+$'
+    TaskId:
+      in: path
+      name: taskId
+      required: true
+      schema:
+        type: string
+        pattern: '^task_[A-Za-z0-9_-]+$'
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    CreateDiscoverySessionRequest:
+      type: object
+      additionalProperties: false
+      required: [requirement]
+      properties:
+        requirement:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        context:
+          type: [string, 'null']
+          maxLength: 20000
+    AddDiscoveryMessageRequest:
+      type: object
+      additionalProperties: false
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 20000
+    DiscoveryMessage:
+      type: object
+      required: [sequence, role, content, createdAt]
+      properties:
+        sequence:
+          type: integer
+          minimum: 1
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    DiscoveryArtifact:
+      type: object
+      required: [id, name, mediaType, sizeBytes, downloadUrl]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        mediaType:
+          type: string
+        sizeBytes:
+          type: integer
+          minimum: 0
+        downloadUrl:
+          type: string
+          format: uri
+    DiscoverySession:
+      type: object
+      required:
+        - id
+        - status
+        - initialRequirement
+        - createdAt
+        - updatedAt
+        - currentRound
+        - recommendedRounds
+        - canFinalize
+        - messages
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [DISCOVERY, READY, FINALIZED]
+        initialRequirement:
+          type: string
+        context:
+          type: [string, 'null']
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        currentRound:
+          type: integer
+          minimum: 0
+        recommendedRounds:
+          type: integer
+          minimum: 1
+        canFinalize:
+          type: boolean
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscoveryMessage'
+        report:
+          type: [string, 'null']
+        artifact:
+          anyOf:
+            - $ref: '#/components/schemas/DiscoveryArtifact'
+            - type: 'null'
+    CreateTaskRequest:
+      type: object
+      additionalProperties: false
+      required: [instruction, repository]
+      properties:
+        instruction:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        repository:
+          $ref: '#/components/schemas/RepositoryInput'
+        limits:
+          $ref: '#/components/schemas/TaskLimits'
+    RepositoryInput:
+      type: object
+      additionalProperties: false
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+        ref:
+          type: string
+          maxLength: 256
+    TaskLimits:
+      type: object
+      additionalProperties: false
+      properties:
+        wallTimeSeconds:
+          type: integer
+          minimum: 10
+          maximum: 3600
+          default: 900
+        maxAgentTurns:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 30
+        maxInputTokens:
+          type: integer
+          minimum: 1000
+          maximum: 1000000
+    Task:
+      type: object
+      required:
+        - id
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: [string, 'null']
+          format: date-time
+        finishedAt:
+          type: [string, 'null']
+          format: date-time
+        result:
+          type: [string, 'null']
+        error:
+          anyOf:
+            - $ref: '#/components/schemas/Error'
+            - type: 'null'
+        usage:
+          $ref: '#/components/schemas/Usage'
+    TaskStatus:
+      type: string
+      enum:
+        - CREATED
+        - QUEUED
+        - PREPARING
+        - RUNNING
+        - CANCELLING
+        - SUCCEEDED
+        - FAILED
+        - CANCELLED
+        - TIMED_OUT
+    Usage:
+      type: object
+      properties:
+        agentTurns:
+          type: integer
+          minimum: 0
+        inputTokens:
+          type: integer
+          minimum: 0
+        outputTokens:
+          type: integer
+          minimum: 0
+        wallTimeSeconds:
+          type: number
+          minimum: 0
+    Artifact:
+      type: object
+      required: [id, name, mediaType, sizeBytes, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        mediaType:
+          type: string
+        sizeBytes:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+        downloadUrl:
+          type: [string, 'null']
+          format: uri
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        retryable:
+          type: boolean
+          default: false

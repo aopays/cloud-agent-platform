@@ -1,0 +1,10 @@
+# Direct dependency lock for the verified Python 3.10-3.12 development baseline.
+# Install with: python -m pip install -c requirements.lock -e ".[dev]"
+fastapi==0.141.1
+httpx==0.28.1
+pydantic==2.13.4
+uvicorn==0.52.4
+mypy==2.3.1
+pytest==9.1.1
+pytest-asyncio==1.4.0
+ruff==0.16.3
