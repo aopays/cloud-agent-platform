@@ -15,10 +15,16 @@ import time
 import uuid
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
+from typing import Any
 
 from src.shared.interfaces import CommandResult
 
 from .errors import SandboxPolicyError
+
+# The Windows-only ctypes attributes are intentionally resolved dynamically.
+# Linux type stubs do not expose WinDLL/WinError even though this code is guarded
+# by the Windows runtime path.
+_windows_ctypes: Any = ctypes
 
 
 class _OutputBudget:
@@ -78,7 +84,7 @@ class _WindowsJob:
     _PROCESS_SET_QUOTA = 0x0100
 
     def __init__(self, process_id: int) -> None:
-        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32 = _windows_ctypes.WinDLL("kernel32", use_last_error=True)
         kernel32.CreateJobObjectW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p]
         kernel32.CreateJobObjectW.restype = ctypes.c_void_p
         kernel32.SetInformationJobObject.argtypes = [
@@ -98,7 +104,7 @@ class _WindowsJob:
         kernel32.CloseHandle.restype = ctypes.c_int
         handle = kernel32.CreateJobObjectW(None, None)
         if not handle:
-            raise ctypes.WinError(ctypes.get_last_error())
+            raise _windows_ctypes.WinError(_windows_ctypes.get_last_error())
         self._kernel32 = kernel32
         self._handle = handle
         limits = _ExtendedLimits()
@@ -111,9 +117,9 @@ class _WindowsJob:
         )
         try:
             if not configured or not process_handle:
-                raise ctypes.WinError(ctypes.get_last_error())
+                raise _windows_ctypes.WinError(_windows_ctypes.get_last_error())
             if not kernel32.AssignProcessToJobObject(handle, process_handle):
-                raise ctypes.WinError(ctypes.get_last_error())
+                raise _windows_ctypes.WinError(_windows_ctypes.get_last_error())
         except Exception:
             self.close()
             raise
@@ -128,7 +134,7 @@ class _WindowsJob:
 
     def terminate(self) -> None:
         if self._handle and not self._kernel32.TerminateJobObject(self._handle, 1):
-            raise ctypes.WinError(ctypes.get_last_error())
+            raise _windows_ctypes.WinError(_windows_ctypes.get_last_error())
 
 
 async def _read_stream(reader: asyncio.StreamReader, budget: _OutputBudget) -> bytes:
@@ -198,7 +204,9 @@ async def run_bounded_process(
 ) -> CommandResult:
     """Execute argv directly; shell parsing is deliberately unavailable."""
 
-    creationflags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
+    creationflags = (
+        int(getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)) if os.name == "nt" else 0
+    )
     started = time.monotonic()
     gate: Path | None = None
     launched_argv = list(argv)
