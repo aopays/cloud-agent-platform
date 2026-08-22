@@ -120,9 +120,9 @@ def create_app(platform: Platform | None = None, *, start_worker: bool = True) -
 <html lang="zh-CN"><head><meta charset="utf-8"><title>Cloud Agent Platform</title></head>
 <body style="font-family:system-ui;max-width:760px;margin:64px auto;padding:0 20px">
 <h1>Cloud Agent Platform MVP</h1>
-<p>平台已启动。请选择入口：</p>
+<p>FDE 客户需求发现工作台与受控 Agent 执行底座已启动。请选择入口：</p>
 <ul>
-  <li><a href="/discovery">需求挖掘与软件设计报告</a></li>
+  <li><a href="/discovery">FDE 客户需求发现与可执行技术方案</a></li>
   <li><a href="/docs">任务 API 文档</a></li>
   <li><a href="/readyz">配置与就绪状态</a></li>
 </ul>

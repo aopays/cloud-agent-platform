@@ -3,7 +3,7 @@
 [English](README.md) | **简体中文**
 
 > **Turn fuzzy ideas and code repositories into bounded, auditable AI work.**
-> 从一句模糊需求到软件设计报告，从一个 Git 仓库到可追踪的 Agent 执行结果。
+> 从客户的一句模糊需求到可执行技术方案，从一个 Git 仓库到可追踪的 Agent 执行结果。
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi&logoColor=white)
@@ -11,12 +11,13 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Status](https://img.shields.io/badge/Status-Alpha-orange)
 
-Cloud Agent Platform 是一个面向 **AI 应用工程师、平台工程团队和技术面试候选人** 的开源 MVP。
+Cloud Agent Platform 是一个面向 **FDE、解决方案架构师、AI 应用工程师和平台工程团队** 的开源 MVP。
 它把“LLM 会调用工具”扩展成一条可以真正运行、取消、审计和演进的工程链路：API 接收任务，调度器投递，
 Worker 准备仓库，Agent Runtime 循环推理与调用工具，Sandbox 控制执行边界，最终返回事件、用量与产物。
 
-项目还提供独立的 **需求挖掘工作台**：用户只需要输入十几个字的模糊需求，系统通过多轮对话补齐用户、目标、
-流程、约束和验收条件，再生成可下载的软件设计报告。
+项目的第一入口是 **FDE 客户需求发现工作台**：FDE 可以输入企业负责人的十几个字模糊需求，系统围绕业务结果、
+决策人、现状证据、范围与非目标、规则、数据、集成、安全和验收继续追问，直到形成可交给架构、开发、QA、
+安全和客户共同评审的技术方案草案。
 
 > 当前版本是可运行的本地开发与架构演示 MVP，不是生产级托管平台。运行时已经实现单 Agent 工具循环；
 > 多 Agent DAG、持久化基础设施和强隔离属于清晰定义的演进路线，而非已经上线的能力。
@@ -31,16 +32,19 @@ Worker 准备仓库，Agent Runtime 循环推理与调用工具，Sandbox 控制
 
 ## 两条可运行产品链路
 
-### 1. 模糊需求 → 软件设计报告
+### 1. 客户沟通 → FDE 技术发现与可执行方案
 
-适合产品经理、创业者、交付团队和 AI 应用工程师。输入例如：
+适合 FDE、解决方案架构师、售前技术顾问和交付负责人。输入例如：
 
 ```text
-设计一个物流司机排班用的软件
+我们想用 AI 提升物流司机排班效率
 ```
 
-系统通过三轮左右的澄清逐步收集角色、业务目标、关键流程、规则、数据、安全、性能和验收标准，最终生成
-Markdown 软件设计报告。入口：`http://127.0.0.1:8001/discovery`。
+系统按业务结果与决策人、As-Is 证据、范围/规则/异常、数据/集成/安全、PoC/MVP 验收五个阶段推进。
+三轮后可以生成草案，但关键阻塞项未关闭时仍会继续追问，单会话最多十二轮。最终输出客户证据、事实/假设/决策、
+技术架构、验收阈值、Go/No-Go 条件和研发移交清单。入口：`http://127.0.0.1:8001/discovery`。
+
+详细方法见 [FDE 客户需求发现工作手册](docs/fde-discovery-playbook.md)。
 
 ### 2. 自然语言任务 + Git 仓库 → Agent 产物
 
@@ -179,7 +183,7 @@ src/
 ├── main.py                 # FastAPI composition root、SSE、下载与健康检查
 ├── platform.py             # Provider、Queue、Sandbox、Worker 的依赖装配
 ├── worker.py               # 从领取任务到终态提交的执行编排
-├── discovery.py            # 多轮需求挖掘、结构化会话与报告生成
+├── discovery.py            # FDE 多轮客户发现、就绪门禁与技术方案生成
 ├── agent_runtime/          # 模型—工具循环、预算、事件、OpenAI Adapter
 ├── api/                    # Task/Discovery 路由与 Pydantic Schema
 ├── scheduler/              # 状态机、队列、租约、取消和幂等
@@ -192,6 +196,7 @@ src/
 ## 文档中心
 
 - [文档导航](docs/README.md)：按产品、开发、架构、安全、测试和发布查阅。
+- [FDE 客户发现手册](docs/fde-discovery-playbook.md)：访谈阶段、证据模型、就绪门禁和研发移交。
 - [产品定位与需求](docs/product-positioning.md)：谁会用、解决什么问题、MVP 范围和成功指标。
 - [代码导览](docs/code-tour.md)：像代码解释器一样按入口、调用链和模块阅读项目。
 - [系统架构](docs/system-architecture.md)：上下文、容器、组件、时序、信任边界和演进架构图。
@@ -205,7 +210,7 @@ src/
 ### 已实现（As-Is）
 
 - 任务创建、查询、取消、事件与产物 API；
-- 模糊需求的多轮澄清页面与设计报告下载；
+- 面向 FDE 的多轮客户发现页面与可执行技术方案下载；
 - Worker、可见性超时、租约、心跳、幂等与状态机；
 - Demo/OpenAI Provider、Agent Loop、工具注册表与预算；
 - 本地可信与 Docker 沙箱 Adapter；

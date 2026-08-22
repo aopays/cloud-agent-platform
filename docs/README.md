@@ -11,7 +11,8 @@
 
 ## 想运行或二次开发
 
-- [需求挖掘功能](requirement-discovery.md)
+- [FDE 客户需求发现工作手册](fde-discovery-playbook.md)
+- [FDE 多轮需求发现功能](requirement-discovery.md)
 - [MVP 需求基线](requirements.md)
 - [MVP 架构基线](architecture.md)
 - [验收标准](acceptance-criteria.md)

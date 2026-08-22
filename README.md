@@ -2,22 +2,25 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-![Cloud Agent Platform: bounded agents, sandboxed tools, auditable results](docs/assets/cloud-agent-platform-hero.svg)
+![Cloud Agent Platform: FDE discovery, bounded agents, auditable delivery](docs/assets/cloud-agent-platform-hero.svg)
 
-[![CI](https://github.com/aopays/Agent/actions/workflows/ci.yml/badge.svg)](https://github.com/aopays/Agent/actions/workflows/ci.yml)
-[![Security](https://github.com/aopays/Agent/actions/workflows/security.yml/badge.svg)](https://github.com/aopays/Agent/actions/workflows/security.yml)
+[![CI](https://github.com/aopays/cloud-agent-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/aopays/cloud-agent-platform/actions/workflows/ci.yml)
+[![Security](https://github.com/aopays/cloud-agent-platform/actions/workflows/security.yml/badge.svg)](https://github.com/aopays/cloud-agent-platform/actions/workflows/security.yml)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-Responses_API-412991?logo=openai&logoColor=white)](https://developers.openai.com/api/docs/quickstart)
 [![License](https://img.shields.io/badge/License-MIT-22c55e)](LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/aopays/Agent?style=social)](https://github.com/aopays/Agent/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/aopays/cloud-agent-platform?style=social)](https://github.com/aopays/cloud-agent-platform/stargazers)
 
-Turn a fuzzy software idea or a Git repository into a **bounded, observable AI workflow**. Cloud Agent Platform combines requirement discovery, an autonomous model–tool loop, task orchestration, sandbox adapters, event streaming, and downloadable artifacts in one runnable Python project.
+An open-source **FDE discovery workspace and Cloud Agent runtime**. It helps Forward Deployed Engineers turn messy customer conversations into evidence-backed, executable technical plans, then run well-scoped repository tasks through bounded, observable AI workflows.
+
+The discovery workflow is designed to stop unproductive meetings: it follows vague words to numbers and examples, separates facts from assumptions, identifies decision makers and system owners, and keeps asking about blockers until the result can be reviewed by architecture, engineering, QA, security, and the customer.
 
 > This repository is a production-aware local MVP and architecture reference, not a hosted production service. The single-agent runtime is implemented today; durable infrastructure, stronger isolation, and multi-agent DAG orchestration are documented evolution paths.
 
 ## Why developers use this project
 
 - **Learn the engineering behind coding agents** — not just prompting, but queues, leases, cancellation, budgets, idempotency, events, artifacts, and failure semantics.
+- **Run disciplined FDE discovery** — capture customer evidence, As-Is pain, scope, owners, data, integrations, acceptance thresholds, risks, and Go/No-Go conditions.
 - **Prototype with a real OpenAI tool loop** — the provider uses the Responses API and structured function calls behind a replaceable interface.
 - **Start without an API key** — a deterministic demo provider exercises the full task lifecycle offline.
 - **Inspect the security boundary** — command execution is routed through sandbox interfaces with path, timeout, output, process-tree, and network controls.
@@ -27,15 +30,17 @@ If that is useful to you, consider giving the project a ⭐ so other agent engin
 
 ## What it can do
 
-### 1. Fuzzy requirement → software design report
+### 1. Customer conversation → FDE technical discovery package
 
 Start with a short idea such as:
 
 ```text
-Design software for scheduling logistics drivers.
+We want to use AI to improve logistics driver scheduling.
 ```
 
-The requirement-discovery workbench asks focused questions over several rounds, separates confirmed facts from assumptions and open decisions, then generates a downloadable Markdown software design report.
+The FDE workbench follows five stages: business outcome and decision authority, As-Is evidence, scope/rules/exceptions, data/integration/security, and PoC/MVP acceptance. Three rounds unlock a draft; unresolved implementation blockers trigger further questions, up to twelve user rounds. The result is a downloadable technical plan with evidence, open decisions, architecture, acceptance thresholds, delivery gates, and an engineering handoff checklist.
+
+Read the [FDE customer discovery playbook](docs/fde-discovery-playbook.md).
 
 ### 2. Natural-language task + Git repository → agent artifact
 
@@ -54,8 +59,8 @@ The API exposes:
 ### Windows PowerShell
 
 ```powershell
-git clone https://github.com/aopays/Agent.git
-cd Agent
+git clone https://github.com/aopays/cloud-agent-platform.git
+cd cloud-agent-platform
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -c requirements.lock -e ".[dev]"
 Copy-Item .env.example .env
@@ -67,8 +72,8 @@ $env:SANDBOX_BACKEND = "local"
 ### Linux and macOS
 
 ```bash
-git clone https://github.com/aopays/Agent.git
-cd Agent
+git clone https://github.com/aopays/cloud-agent-platform.git
+cd cloud-agent-platform
 python3 -m venv .venv
 ./.venv/bin/python -m pip install -c requirements.lock -e ".[dev]"
 cp .env.example .env
@@ -216,7 +221,7 @@ See the detailed [multi-agent target architecture](docs/multi-agent-platform-arc
 Useful contributions include reproducible agent tasks, eval cases, sandbox attacks, persistence adapters, UI improvements, and documentation fixes.
 
 1. Read [CONTRIBUTING.md](CONTRIBUTING.md).
-2. Start with a focused issue or [GitHub Discussion](https://github.com/aopays/Agent/discussions).
+2. Start with a focused issue or [GitHub Discussion](https://github.com/aopays/cloud-agent-platform/discussions).
 3. Keep the trust boundary and public contracts intact.
 4. Add tests for every behavior change.
 

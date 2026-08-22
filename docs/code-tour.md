@@ -203,13 +203,14 @@ no-new-privileges、CPU/内存/PID/临时盘限制。Docker 控制命令与用�
 `LocalArtifactStore` 使用 SHA-256 和逻辑名称实现内容校验与幂等，限制单产物大小，并把真实存储路径隐藏在 API
 响应之后。当前元数据在内存中，重启后不恢复；生产 Adapter 应使用 PostgreSQL + S3/MinIO。
 
-## 11. 需求挖掘：`src/discovery.py`
+## 11. FDE 客户需求发现：`src/discovery.py`
 
-Discovery 是与仓库任务并列的产品模块：
+Discovery 是与仓库任务并列的产品模块，也是 FDE 进入客户后的前置工作台：
 
 - `DiscoveryService` 管理会话、消息、状态和最终报告；
-- `DemoDiscoveryAssistant` 提供可重复、无需费用的确定性流程；
-- `ProviderDiscoveryAssistant` 使用同一 LLMProvider 做开放式澄清；
+- `DemoDiscoveryAssistant` 提供可重复、无需费用的确定性 FDE 访谈流程；
+- `ProviderDiscoveryAssistant` 使用同一 LLMProvider 按就绪门禁追问实施阻塞项；
+- 报告严格区分事实、假设、决策、风险和开放问题，并形成研发与 QA 移交清单；
 - `src/discovery_ui.py` 是无构建步骤的单页演示 UI；
 - `src/api/discovery_routes.py` 提供创建、追加消息、完成和下载接口。
 

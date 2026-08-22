@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Questions and design discussions
-    url: https://github.com/aopays/Agent/discussions
+    url: https://github.com/aopays/cloud-agent-platform/discussions
     about: Ask usage questions or discuss ideas before opening an implementation issue.
