@@ -5,13 +5,15 @@
 ## 第一次了解项目
 
 1. [项目首页](../README.md)：价值、能力、启动和演示路径。
-2. [产品定位与需求](product-positioning.md)：目标用户、核心场景、MVP 范围和指标。
-3. [系统架构](system-architecture.md)：从系统上下文到组件、时序和部署。
-4. [代码导览](code-tour.md)：从 `src/main.py` 开始逐层读懂代码。
+2. [FDE / AI Agent 面试展示包](fde-interview-kit.md)：三分钟讲稿、现场 Demo、常见追问和简历写法。
+3. [产品定位与需求](product-positioning.md)：目标用户、核心场景、MVP 范围和指标。
+4. [系统架构](system-architecture.md)：从系统上下文到组件、时序和部署。
+5. [代码导览](code-tour.md)：从 `src/main.py` 开始逐层读懂代码。
 
 ## 想运行或二次开发
 
-- [需求挖掘功能](requirement-discovery.md)
+- [FDE 客户需求发现工作手册](fde-discovery-playbook.md)
+- [FDE 多轮需求发现功能](requirement-discovery.md)
 - [MVP 需求基线](requirements.md)
 - [MVP 架构基线](architecture.md)
 - [验收标准](acceptance-criteria.md)
@@ -26,6 +28,11 @@
 - [公开安全策略](../SECURITY.md)
 - [需求场景评测](reviews/discovery-scenario-evaluation.md)
 - [任务看板与决策记录](task-board.md)
+
+## 想了解开源传播与项目包装
+
+- [对标仓库增长分析](open-source-growth-analysis.md)：用公开数据拆解搜索入口、首屏转化、面试资料和 Star 路径。
+- [FDE / AI Agent 面试展示包](fde-interview-kit.md)：把可运行能力转成有证据的项目讲解，不虚构业务和性能指标。
 
 ## 想看真实软件生命周期
 

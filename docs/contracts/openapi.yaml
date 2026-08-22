@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Cloud Agent Platform API
   version: 0.1.0
-  description: P0 contract for task lifecycle, events, and artifacts.
+  description: P0 contract for FDE discovery, task lifecycle, events, and artifacts.
 servers:
   - url: http://localhost:8000
 security:
@@ -11,7 +11,7 @@ paths:
   /v1/discovery-sessions:
     post:
       operationId: createDiscoverySession
-      summary: Start a multi-turn requirement discovery conversation
+      summary: Start a multi-turn FDE customer discovery conversation
       requestBody:
         required: true
         content:
@@ -45,7 +45,7 @@ paths:
   /v1/discovery-sessions/{sessionId}/messages:
     post:
       operationId: addDiscoveryMessage
-      summary: Answer questions and continue requirement discovery
+      summary: Record customer evidence and continue FDE discovery
       parameters:
         - $ref: '#/components/parameters/DiscoverySessionId'
       requestBody:
@@ -68,7 +68,7 @@ paths:
   /v1/discovery-sessions/{sessionId}/finalize:
     post:
       operationId: finalizeDiscoverySession
-      summary: Generate the software design report
+      summary: Generate the FDE technical discovery and solution report
       parameters:
         - $ref: '#/components/parameters/DiscoverySessionId'
       responses:
@@ -83,12 +83,12 @@ paths:
   /v1/discovery-sessions/{sessionId}/report:
     get:
       operationId: downloadDiscoveryReport
-      summary: Download the finalized Markdown software design report
+      summary: Download the finalized Markdown FDE technical solution
       parameters:
         - $ref: '#/components/parameters/DiscoverySessionId'
       responses:
         '200':
-          description: Software design report
+          description: FDE technical discovery and solution report
           content:
             text/markdown:
               schema:

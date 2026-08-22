@@ -60,8 +60,8 @@ def test_multi_turn_discovery_generates_and_downloads_design_report(tmp_path: Pa
         assert finalized.status_code == 200
         body = finalized.json()
         assert body["status"] == "FINALIZED"
-        assert "物流司机排班软件设计报告" in body["report"]
-        assert body["artifact"]["name"] == "software-design-report.md"
+        assert "FDE 客户需求发现与物流司机排班技术方案" in body["report"]
+        assert body["artifact"]["name"] == "fde-technical-solution.md"
 
         downloaded = client.get(body["artifact"]["downloadUrl"], headers=auth())
         assert downloaded.status_code == 200
@@ -75,8 +75,9 @@ def test_discovery_ui_and_openapi_are_exposed(tmp_path: Path) -> None:
         page = client.get("/discovery")
         assert page.status_code == 200
         assert page.headers["cache-control"] == "no-store"
-        assert "需求发现 Agent" in page.text
-        assert "设计一个物流司机排班用的软件" in page.text
+        assert "FDE 客户需求发现工作台" in page.text
+        assert "我们想用 AI 提升物流司机排班效率" in page.text
+        assert "拒绝无效沟通" in page.text
         assert '""":"&quot;"' not in page.text
         assert "element.textContent = value" in page.text
 

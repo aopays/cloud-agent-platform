@@ -1,0 +1,54 @@
+name: Feature request
+description: Propose an FDE discovery improvement or a real-world agent workflow.
+title: "[Feature]: "
+labels:
+  - enhancement
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Cloud Agent Platform. Concrete workflows and measurable outcomes are especially useful.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or workflow
+      description: Who has this problem, and what are they trying to complete?
+      placeholder: As a platform engineer, I need...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest useful behavior, including inputs and outputs.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance evidence
+      description: How could maintainers verify that the feature works?
+      placeholder: Given..., when..., then...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Agent runtime and tools
+        - Sandbox and security
+        - API and scheduling
+        - Requirement discovery
+        - Documentation and onboarding
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Safety check
+      options:
+        - label: This proposal does not require committing secrets or bypassing the sandbox boundary.
+          required: true
