@@ -1,6 +1,6 @@
-# 🧭 Cloud Agent Platform
+# Cloud Agent Platform
 
-**面向 FDE 的客户需求发现工作台 + 可审计的 Cloud Agent 运行平台**
+一个从场景面试题做起的 FDE 需求发现与 Agent 执行平台
 
 **简体中文** · [English overview](#english-overview)
 
@@ -13,37 +13,26 @@
 [![License](https://img.shields.io/badge/License-MIT-22c55e)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/aopays/cloud-agent-platform?style=social)](https://github.com/aopays/cloud-agent-platform/stargazers)
 
-客户说：“我们想用 AI 优化司机排班。”真正困难的不是马上写代码，而是弄清楚谁负责决策、现在损失多少、规则和例外是什么、数据在哪里，以及怎样才算交付成功。
+这个项目最初来自一道 AI 应用开发岗位的场景题：用户提交一句自然语言任务和一个代码仓库，平台在隔离环境中启动 Agent，让模型调用工具完成任务。我在拆题时发现，真正麻烦的地方不只在 Agent Loop。任务开始以前，FDE（Forward Deployed Engineer）往往还要先把客户十几个字的想法问清楚；任务开始以后，平台则要处理排队、超时、取消、权限和失败恢复。
 
-Cloud Agent Platform 把这类模糊沟通变成两条可运行链路：
+所以仓库里有两个相互关联的功能：
 
-1. **模糊需求 → FDE 技术方案**：多轮追问证据、范围、规则、数据、集成、安全和验收，生成可交给架构、研发、QA 与客户评审的 Markdown 方案。
-2. **自然语言任务 + Git 仓库 → Agent 产物**：在有预算、可取消、可追踪的工具循环中读取仓库、调用工具、记录事件并返回报告。
+- `/discovery` 用于前期需求访谈。它会继续追问业务目标、现状、规则、数据和验收方式，最后整理成技术方案草稿。
+- `/v1/tasks` 用于执行仓库任务。Worker 准备代码，Agent 调用受控工具，平台记录过程并保存结果。
 
-> 这是一个 production-aware 的本地 MVP 和系统设计参考，不是已经上线的 SaaS。当前实现的是单 Agent 工具循环；多 Agent DAG、持久化基础设施和更强隔离是明确标注的演进方向。
+当前版本是本地可运行的 MVP，适合用于面试展示、学习 Agent 工程或继续二次开发。它还不是托管服务：数据主要保存在进程内，产品运行时只有一个 Agent，多 Agent DAG 和生产级基础设施都还在设计阶段。
 
-**快速导航**： [输入与输出](#30-秒看懂输入与输出) · [本地启动](#本地快速跑通不需要-openai-key) · [面试演示](#5-分钟面试演示路线) · [系统架构](#一张图看懂系统) · [关键源码](#关键模块不只是-prompt) · [工程资料](#工程资料包) · [安全边界](#安全说明)
+**文档导航**： [运行项目](#本地运行) · [需求发现](#需求发现会产出什么) · [仓库任务](#仓库任务会返回什么) · [演示建议](#面试时怎么演示) · [架构](#系统结构) · [源码入口](#从哪里开始读代码) · [已知限制](#当前限制)
 
-## 先看结论：这个项目适合谁
+## 需求发现会产出什么
 
-- **FDE / 解决方案架构师**：减少无效访谈，把客户口头描述变成带证据、责任人与 Go/No-Go 条件的实施输入。
-- **AI 应用开发工程师**：学习 Responses API、Function Calling、Agent Loop、工具注册、预算与失败语义如何组成真实系统。
-- **Agent Platform / 后端工程师**：研究任务状态机、幂等、at-least-once 投递、租约、取消、事件和产物闭环。
-- **准备系统设计面试的开发者**：可以运行、演示、读代码，也能解释安全边界、工程取舍与生产演进路线。
-
-如果你只想找一个聊天页面，这个仓库可能太重；如果你想解释“Agent 为什么能安全、可靠地替人做事”，它正好从最容易被忽略的工程问题开始。
-
-## 30 秒看懂输入与输出
-
-### 场景 A：FDE 需求发现
-
-输入一句不完整的客户需求：
+例如客户只说：
 
 ```text
 给物流公司设计一个司机排班软件，主要给货车司机使用。
 ```
 
-系统不会直接编造完整 PRD，而是继续确认：
+系统不会立刻补出一份“完整 PRD”，因为这时大部分信息都没有依据。它会继续问：
 
 - 要改善的业务指标、基线和决策人；
 - 当前流程、异常证据、范围与非目标；
@@ -51,9 +40,9 @@ Cloud Agent Platform 把这类模糊沟通变成两条可运行链路：
 - 司机、车辆、订单、地图等数据与系统负责人；
 - 权限、安全、合规、PoC/MVP 验收阈值。
 
-最终下载 `fde-technical-solution.md`，包含事实/假设/决策/风险、As-Is/To-Be、FR 编号、数据和接口、架构、安全/NFR、验收门槛、交付阶段及研发移交清单。
+对话达到最低轮次后可以下载 `fde-technical-solution.md`。报告会把客户已经确认的事实、系统暂时采用的假设和仍待决定的问题分开，并整理范围、功能需求、数据接口、架构、安全要求、验收条件和研发移交事项。
 
-### 场景 B：仓库 Agent 任务
+## 仓库任务会返回什么
 
 输入自然语言任务和公开 Git URL：
 
@@ -67,9 +56,11 @@ Cloud Agent Platform 把这类模糊沟通变成两条可运行链路：
 }
 ```
 
-平台返回 Task ID、终态、单调递增事件、工具调用摘要、Agent turns、token/时间用量，以及可下载的 Markdown 或文本产物。超时、取消、策略拒绝和执行失败都有明确错误语义。
+请求成功后会得到 Task ID。通过查询接口可以看到任务状态、执行事件、工具调用摘要、token/时间用量和最终产物。超时、取消、策略拒绝与普通执行失败使用不同的状态和错误码，方便调用方决定是否重试。
 
-## 本地快速跑通：不需要 OpenAI Key
+## 本地运行
+
+第一次运行建议先使用 Demo Provider，不需要 OpenAI Key，也不会产生模型费用。
 
 ### Windows PowerShell
 
@@ -108,20 +99,22 @@ LLM_PROVIDER=demo SANDBOX_BACKEND=local bash scripts/start.sh
 .\.venv\Scripts\python.exe scripts\demo.py
 ```
 
-离线 Demo 使用确定性 Provider，不访问模型、不产生模型费用。它会扫描 `examples/demo-repo` 并生成 TODO/FIXME 报告，用于证明队列、Worker、Runtime、事件与产物已经连通。
+这个 Demo 会扫描 `examples/demo-repo` 中的 TODO/FIXME。报告内容很简单，它的作用是提供一个稳定的端到端样例，用来检查队列、Worker、Runtime、事件和产物是否连通。
 
-## 5 分钟面试演示路线
+## 面试时怎么演示
+
+我通常按下面的顺序演示：
 
 1. 在 `/discovery` 输入“给物流公司设计司机排班软件”。
-2. 用三轮回答补充现状损失、强制规则、数据源和验收指标。
-3. 下载技术方案，展示系统没有把假设伪装成客户事实。
-4. 打开 `/docs`，提交一个仓库扫描任务并查看事件和产物。
-5. 用下方架构图解释控制面、执行面、沙箱边界和失败语义。
-6. 最后说明当前限制与 PostgreSQL/Redis/S3、多租户、强沙箱和多 Agent DAG 的演进路径。
+2. 分三轮补充现在怎么排班、哪些规则不能违反、数据来自哪里，以及 PoC 怎样验收。
+3. 下载方案，重点看哪些内容是事实，哪些仍是假设。
+4. 打开 `/docs` 提交仓库扫描任务，查看事件和最终文件。
+5. 结合架构图解释为什么 API 不直接执行命令，以及取消如何传到正在运行的工具。
+6. 最后主动说明内存存储、单 Agent 和 Docker 隔离等限制。
 
 完整讲稿、常见追问、简历描述与诚实边界见 [FDE / AI Agent 面试展示包](docs/fde-interview-kit.md)。
 
-## 一张图看懂系统
+## 系统结构
 
 ```mermaid
 flowchart LR
@@ -143,9 +136,9 @@ flowchart LR
     Artifacts --> User
 ```
 
-控制面不执行用户命令。Worker 负责仓库准备、租约、沙箱生命周期、Runtime 调用、产物和终态；Runtime 只能通过经过 Schema 与策略校验的工具访问 `SandboxSession`，不能直接在宿主机执行 shell。
+这里刻意把控制面和执行面分开。FastAPI 负责接收和查询任务，不直接执行用户命令；Worker 负责准备仓库、维护租约、启动沙箱和提交结果。Runtime 也不能直接调用宿主机 shell，只能使用注册过的工具，再由工具访问 `SandboxSession`。
 
-## 关键模块：不只是 Prompt
+## 从哪里开始读代码
 
 - [`src/discovery.py`](src/discovery.py)：FDE 访谈状态、就绪门禁、Provider Prompt 和技术方案生成。
 - [`src/agent_runtime/loop.py`](src/agent_runtime/loop.py)：有界模型—工具循环，处理预算、取消、重试、重复调用和无进展终止。
@@ -156,17 +149,16 @@ flowchart LR
 - [`src/sandbox/`](src/sandbox/)：本地可信与 Docker Session、路径和符号链接防护、进程树与资源策略。
 - [`src/storage.py`](src/storage.py)：原子事件序列和内容寻址产物的 MVP 存储实现。
 
-逐文件阅读建议见 [代码导览](docs/code-tour.md)，完整设计见 [系统架构](docs/system-architecture.md)。
+如果是第一次阅读，建议按 `src/main.py` → `src/platform.py` → `src/worker.py` → `src/agent_runtime/loop.py` 的顺序走一遍主流程。更细的说明放在 [代码导览](docs/code-tour.md) 和 [系统架构](docs/system-architecture.md) 中。
 
-## 为什么它比普通 Agent Demo 更值得讨论
+## 实现时重点处理的问题
 
-- **可控**：模型轮次、输入 token、墙钟时间、命令时间和输出大小都有上限。
-- **可取消**：取消从 API 传播到 Worker、Runtime、工具协程和进程树清理。
-- **可恢复地设计**：任务状态机、at-least-once 队列、幂等键、租约和心跳都有显式语义。
-- **可审计**：只记录公开行动摘要、状态、工具和预算事件，不持久化模型私有思维链。
-- **可替换**：Provider、任务仓储、队列、租约、事件、产物和 Sandbox 都通过接口保留替换点。
-- **安全边界明确**：默认禁网、非 root、capabilities 最小化、路径穿越防护、输出脱敏和资源限制。
-- **工程事实可验证**：Ruff、strict mypy、pytest、Windows/Linux CI、Docker smoke、CodeQL 和依赖审计已经配置。
+- Agent 不能一直跑。模型轮次、输入 token、总时间、命令时间和工具输出都有上限。
+- 取消不是只改数据库状态。请求会传到 Runtime、工具协程，并触发进程树清理。
+- 队列按 at-least-once 设计，因此任务创建和终态提交必须考虑幂等与重复投递。
+- 日志不保存模型的私有思维链，只记录任务状态、行动摘要、工具、预算和错误。
+- Provider、队列、事件、产物与 Sandbox 使用接口隔开，后续可以替换实现。
+- Local Sandbox 只用于可信输入；Docker 配置了禁网、非 root、capabilities 和资源限制，但仍不是最终的强隔离方案。
 
 ## 接入 OpenAI
 
@@ -192,7 +184,7 @@ GET /v1/tasks/{taskId}/artifacts/{artifactId}
 
 当前只支持公开 HTTPS 仓库。`file://` 仓库必须位于 `REPOSITORY_IMPORT_ROOT` 下；不要把仓库凭证写进 URL。
 
-## 工程资料包
+## 相关文档
 
 - [FDE / AI Agent 面试展示包](docs/fde-interview-kit.md)：3 分钟讲稿、Demo、常见追问、STAR 和简历写法。
 - [FDE 客户需求发现手册](docs/fde-discovery-playbook.md)：访谈阶段、证据模型、就绪门禁和研发移交。
@@ -203,9 +195,9 @@ GET /v1/tasks/{taskId}/artifacts/{artifactId}
 - [安全边界](docs/security-boundary.md) 与 [安全策略](SECURITY.md)：威胁模型、已实现控制和生产缺口。
 - [对标仓库增长分析](docs/open-source-growth-analysis.md)：哪些传播方法值得学习，哪些夸大方式不应该复制。
 
-## 已实现与演进路线
+## 当前做到哪里
 
-已实现：
+现在已经可以跑通：
 
 - FDE 多轮需求发现、就绪判断、技术方案生成和下载；
 - 任务创建、查询、取消、事件与产物 API；
@@ -214,7 +206,7 @@ GET /v1/tasks/{taskId}/artifacts/{artifactId}
 - 路径逃逸、超时、取消、输出限额和秘密脱敏；
 - 单元、集成、端到端、安全测试与跨平台 CI。
 
-下一阶段：
+下面这些还没有实现，是后续可能继续做的内容：
 
 - PostgreSQL、Redis、S3/MinIO 持久化 Adapter；
 - OIDC、租户、RBAC、配额、限流、成本中心和审计；
@@ -223,13 +215,13 @@ GET /v1/tasks/{taskId}/artifacts/{artifactId}
 - 需求、架构、安全、QA 多 Agent DAG 与独立质量门；
 - Temporal/Kubernetes Worker 与 gVisor、Kata 或 Firecracker 强隔离。
 
-## 安全说明
+## 当前限制
 
-`SANDBOX_BACKEND=local` 只适合可信开发输入，并且在非 development/test 环境会被拒绝。Docker 是 MVP 隔离层，不是运行任意恶意代码的最终安全边界。生产环境还必须补齐真实身份、多租户隔离、持久化、限流、托管密钥和更强沙箱。
+任务、队列和事件目前主要保存在进程内，服务重启后不能恢复。`SANDBOX_BACKEND=local` 只适合自己控制的代码，并且在非 development/test 环境会被拒绝。Docker Adapter 增加了一层隔离，但不能据此运行任意恶意代码。若要用于生产环境，至少还需要补充真实身份、多租户隔离、持久化、限流、托管密钥和更强的沙箱。
 
 详细威胁模型见 [docs/security-boundary.md](docs/security-boundary.md)。安全问题请通过 GitHub Security Advisories 私下报告。
 
-## 本地质量门
+## 我用这些命令检查项目
 
 ```powershell
 .\.venv\Scripts\python.exe -m ruff format --check .
@@ -240,16 +232,16 @@ GET /v1/tasks/{taskId}/artifacts/{artifactId}
 .\.venv\Scripts\python.exe -m compileall -q src tests scripts
 ```
 
-## 开源协作
+## 参与项目
 
-欢迎贡献可复现任务、Eval 数据、安全攻击用例、持久化 Adapter、Web Console 和文档修复。提交前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。项目使用 [MIT License](LICENSE)。
+如果你发现了可以复现的 Agent 失败、沙箱绕过方式，或者愿意补持久化 Adapter 和 Web 页面，可以先开 Issue 说明场景。提交代码前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。项目使用 [MIT License](LICENSE)。
 
-如果这个项目帮助你理解 FDE 需求发现、Agent 编排、工具调用或沙箱工程，请给它一个 ⭐。比 Star 更重要的是：欢迎在 [Issues](https://github.com/aopays/cloud-agent-platform/issues) 留下一个真实业务需求或失败案例，让下一次迭代解决真实问题。
+如果这个项目对你有用，可以点一个 Star 方便以后找到。也欢迎在 [Issues](https://github.com/aopays/cloud-agent-platform/issues) 留下真实需求；比起“再加一个 Agent”，我更希望后续功能来自可以复现的问题。
 
 ## English overview
 
-Cloud Agent Platform is an open-source **FDE customer-discovery workspace and bounded Cloud Agent runtime**. It turns vague customer conversations into evidence-backed technical plans, and runs scoped repository tasks through observable model-tool workflows.
+Cloud Agent Platform started as an AI application engineering interview project. It combines an FDE requirement-discovery workflow with a small, bounded runtime for repository tasks.
 
-The runnable MVP includes multi-turn discovery, FastAPI task/event/artifact APIs, Demo and OpenAI Responses providers, a bounded agent loop, validated tools, scheduling semantics, local/Docker sandbox adapters, automated tests, CI, and explicit security boundaries. It does **not** claim that the documented multi-agent DAG or production persistence stack is already implemented.
+The current version runs locally and includes multi-turn discovery, task/event/artifact APIs, Demo and OpenAI providers, validated tools, cancellation, budgets, and local/Docker sandbox adapters. State is mostly in memory and the product runtime is still single-agent; the multi-agent DAG in the documentation is a future design.
 
-Start with the [local quickstart](#本地快速跑通不需要-openai-key), read the [system architecture](docs/system-architecture.md), or use the [interview and demo kit](docs/fde-interview-kit.md).
+Start with the [local setup](#本地运行), read the [system architecture](docs/system-architecture.md), or use the [interview notes](docs/fde-interview-kit.md).

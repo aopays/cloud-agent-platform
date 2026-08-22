@@ -28,7 +28,7 @@ def test_default_readme_exposes_runnable_and_honest_product_story() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
     assert "FDE" in readme
-    assert "本地快速跑通" in readme
+    assert "本地运行" in readme
     assert "docs/fde-interview-kit.md" in readme
     assert "docs/security-boundary.md" in readme
-    assert "当前实现的是单 Agent 工具循环" in readme
+    assert "产品运行时只有一个 Agent" in readme
